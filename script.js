@@ -1,3 +1,5 @@
+//Pegando bloco dos gatos
+var bloco_dos_gatos = document.querySelector('#bloco-dos-gatos');
 
 //Buscando botão de chamar gatos
 var botao_chamar_gatos = document.querySelector("#botao-chamar-gatos");
@@ -11,7 +13,51 @@ var botao_carregar_gatos = document.querySelector('#botao-carregar-gatos');
 //Buscando botão de deletar gatos
 var botao_deletar_gatos = document.querySelector('#botao-deletar-gatos');
 
+//Buscando botão de listar logs
+var botao_mostrar_logs_api = document.querySelector('#botao-mostrar-logs-api');
+
 var lista_de_gatos = [];
+
+//Listar logs api ao clicar no botão
+botao_mostrar_logs_api.addEventListener('click', async () => {
+    let resposta_logs = await fetch('back/listar_logs_api.php');
+    resposta_logs = await resposta_logs.json();
+    if(resposta_logs.ok){
+        //Guardando logs em uma variável
+        let lista_de_logs = resposta_logs.dados;
+        if (lista_de_logs.length < 1) {
+            alert('Nenhum log cadastrado!');
+        }
+        //Limpando tela
+        bloco_dos_gatos.innerHTML = '';
+        //Iterando pelos logs
+        lista_de_logs.forEach((log) => {
+            //Criando cartão de log
+            let card_log = document.createElement('div');
+            card_log.classList.add('card');
+            card_log.classList.add('card-style');
+            //Criando texto do log
+            let card_log_text = document.createElement('p');
+            card_log_text.classList.add('card-text');
+            //Criando elemento de lista não ordenada
+            let card_log_text_list = document.createElement('ul');
+            //Iterando pelos dados dos logs
+            for (const key in log) {
+                //Execute a seguir se o objeto tem o atributo
+                if (Object.prototype.hasOwnProperty.call(log, key)) {
+                    let item = document.createElement('li');
+                    item.innerHTML = `${key}: ${log[key]}`;
+                    card_log_text_list.appendChild(item);
+                }
+            }
+            card_log_text.appendChild(card_log_text_list);
+            card_log.appendChild(card_log_text);
+            bloco_dos_gatos.appendChild(card_log);
+        });
+    }else{
+        alert('Erro ao listar logs do banco de dados');
+    }
+});
 
 //Chamar gatos ao clicar no botão
 botao_chamar_gatos.addEventListener('click', async () => {
@@ -25,7 +71,7 @@ botao_chamar_gatos.addEventListener('click', async () => {
     //Validando se deu certo buscar os gatos
     if (resposta_API.ok == true) {
         //De certo buscar os gatos
-        console.log("Requisição API dos gatos realizada com sucesso");
+        //console.log("Requisição API dos gatos realizada com sucesso");
         //Mostrando na tela que deu certo
         elemento_retorno_API.textContent = "Aqui estão seus gatos";
         //Deixando o texto verde
@@ -33,7 +79,29 @@ botao_chamar_gatos.addEventListener('click', async () => {
 
         //Mostrando gatos no console
         lista_de_gatos = await resposta_API.json();
-        console.log(lista_de_gatos);
+
+        //Cadastrando no banco o log de chamada API
+
+        let resposta_criar_log = await fetch('back/cadastrar_log_api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type':'application/json'
+            },
+            body: JSON.stringify({
+                numeroregistros: lista_de_gatos.length
+            })
+        });
+
+        resposta_criar_log = await resposta_criar_log.json()
+
+        if (resposta_criar_log.ok) {
+            alert('Log de chamada API registrado!');
+        } else {
+            alert('Log de chamada API não foi registrado...');
+        }
+        //console.log(resposta_criar_log);
+
+        //console.log(lista_de_gatos);
         //console.log("Tipo da lista de gatos: " + typeof(lista_de_gatos));
 
         //Criando imagem dos gatos
@@ -136,10 +204,7 @@ async function deletar_todos_no_banco(){
 }
 
 function mostrar_gatos(lista_de_gatos) {
-
-    //Pegando bloco dos gatos
-    let bloco_dos_gatos = document.querySelector('#bloco-dos-gatos');
-
+    bloco_dos_gatos.innerHTML = '';
     lista_de_gatos.forEach(async (objeto_gato) => {
         //Criando cartão do gato
         let card = document.createElement('div');
@@ -151,6 +216,7 @@ function mostrar_gatos(lista_de_gatos) {
         card_img.src = objeto_gato.url;
         card_img.classList.add('card-img-top');
         card_img.alt = objeto_gato.nome ? objeto_gato.nome : objeto_gato.id;
+        card_img.download = objeto_gato.id;
         card.appendChild(card_img);
 
         //Criando título do cartão do gato
@@ -196,10 +262,10 @@ function mostrar_gatos(lista_de_gatos) {
         //Link da imagem do gato
         let card_link = document.createElement('a');
         card_link.href = objeto_gato.url;
-        card_link.textContent = "Visualizar";
+        card_link.textContent = "Ver";
         card_link.target = "_blank"; //Abrirá em nova aba
         card_link.classList.add('btn');
-        card_link.classList.add('btn-primary');
+        card_link.classList.add('btn-dark');
         card_text.appendChild(card_link);
 
         //Botão de Cadastrar gato

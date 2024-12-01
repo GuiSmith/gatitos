@@ -12,5 +12,11 @@ CREATE TABLE gato (
     data_atualizacao DATETIME ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE log (
+ idlog INT PRIMARY KEY AUTO_INCREMENT,
+ datahora timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ numeroregistros int(11) NOT NULL DEFAULT '0'
+);
+
 --SHOW TABLES;
 --DESCRIBE TABLE nome_da_tabela;
